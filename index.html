@@ -10,82 +10,105 @@ body{
 font-family: Arial;
 margin:0;
 background: linear-gradient(135deg,#4facfe,#00f2fe);
-color:#333;
 }
 
 .container{
-max-width:400px;
+max-width:420px;
 margin:auto;
 background:white;
 min-height:100vh;
-padding:20px;
+padding:25px;
 border-radius:20px;
 box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
-h1{
-text-align:center;
-}
+h1{text-align:center;}
 
-input, select, button{
+input,select,button{
 width:100%;
-padding:10px;
+padding:12px;
 margin:8px 0;
-border-radius:10px;
-border:1px solid #ccc;
+border-radius:12px;
+border:1px solid #ddd;
 }
 
 button{
 background:#4facfe;
 color:white;
 border:none;
-font-size:16px;
 cursor:pointer;
 }
 
 button:hover{
-background:#3b8eea;
+background:#2f80ed;
 }
 
-.menu button{
-margin:10px 0;
-font-size:18px;
-}
+.menu button{font-size:18px;}
 
-.back{
-background:#888;
-}
+.back{background:#888;}
 
-ul{
-text-align:left;
+.profile-img{
+width:100px;
+height:100px;
+border-radius:50%;
+object-fit:cover;
+display:block;
+margin:auto;
 }
 </style>
-
 </head>
 
 <body>
 
 <!-- LOGIN -->
 <div id="loginPage" class="container">
+<div style="text-align:center;color:#2f80ed;font-weight:bold;">
+Website to improve the quality of life
+</div>
+
+<div style="text-align:center;margin-bottom:20px;">
+ก้าวแรกสู่การพัฒนาตัวเอง
+</div>
+
 <h1>🔐 Login</h1>
-<input type="text" id="username" placeholder="Username">
+
+<input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Password">
-<button onclick="register()">สมัครสมาชิก</button>
 <button onclick="login()">เข้าสู่ระบบ</button>
 </div>
 
 <!-- MENU -->
 <div id="menuPage" class="container" style="display:none;">
 <h1>📱 Smart Life</h1>
+
 <div class="menu">
-<button onclick="openPage('moneyPage')">💰 รายรับรายจ่าย</button>
-<button onclick="openPage('calPage')">🔥 คำนวณแคลอรี่</button>
-<button onclick="openPage('activityPage')">⏰ แจ้งเตือนกิจกรรม</button>
+<button onclick="openPage('moneyPage')">💰 การเงิน</button>
+<button onclick="openPage('calPage')">🔥 แคลอรี่</button>
+<button onclick="openPage('activityPage')">⏰ กิจกรรม</button>
+<button onclick="openPage('profilePage')">👤 โปรไฟล์</button>
 </div>
+
 <button class="back" onclick="logout()">ออกจากระบบ</button>
 </div>
 
-<!-- MONEY PAGE -->
+<!-- PROFILE -->
+<div id="profilePage" class="container" style="display:none;">
+<h1>👤 โปรไฟล์</h1>
+
+<img id="profileImg" class="profile-img" src="https://via.placeholder.com/100">
+
+<input type="text" id="name" placeholder="ชื่อ">
+<input type="number" id="age" placeholder="อายุ">
+<input type="number" id="weight" placeholder="น้ำหนัก (kg)">
+<input type="text" id="goal" placeholder="เป้าหมายสุขภาพ">
+<input type="text" id="imgUrl" placeholder="ลิงก์รูปโปรไฟล์">
+
+<button onclick="saveProfile()">บันทึกโปรไฟล์</button>
+
+<button class="back" onclick="backMenu()">กลับเมนู</button>
+</div>
+
+<!-- MONEY -->
 <div id="moneyPage" class="container" style="display:none;">
 <h1>💰 การเงิน</h1>
 
@@ -104,13 +127,13 @@ text-align:left;
 <button class="back" onclick="backMenu()">กลับเมนู</button>
 </div>
 
-<!-- CALORIE PAGE -->
+<!-- CALORIE -->
 <div id="calPage" class="container" style="display:none;">
 <h1>🔥 แคลอรี่</h1>
 
 <input type="number" id="foodCal" placeholder="แคลอรี่ที่กิน">
 <button onclick="addFood()">เพิ่ม</button>
-<h3>รวม: <span id="totalFoodCal">0</span> kcal</h3>
+<h3>รวม: <span id="totalFoodCal">0</span></h3>
 
 <input type="number" id="walkMinutes" placeholder="เดินกี่นาที">
 <button onclick="calculateWalk()">คำนวณ</button>
@@ -119,13 +142,13 @@ text-align:left;
 <button class="back" onclick="backMenu()">กลับเมนู</button>
 </div>
 
-<!-- ACTIVITY PAGE -->
+<!-- ACTIVITY -->
 <div id="activityPage" class="container" style="display:none;">
 <h1>⏰ กิจกรรม</h1>
 
 <input type="text" id="activityName" placeholder="ชื่อกิจกรรม">
 <input type="time" id="activityTime">
-<button onclick="addActivity()">เพิ่มแจ้งเตือน</button>
+<button onclick="addActivity()">เพิ่ม</button>
 
 <ul id="activityList"></ul>
 
@@ -139,22 +162,20 @@ let expense=0;
 let totalFoodCal=0;
 let activities=[];
 
-function register(){
-let u=username.value;
-let p=password.value;
-if(!u||!p) return alert("กรอกข้อมูล");
-localStorage.setItem("user_"+u,p);
-alert("สมัครสำเร็จ");
-}
-
 function login(){
-let u=username.value;
-let p=password.value;
-let saved=localStorage.getItem("user_"+u);
-if(saved===p){
-currentUser=u;
+let email=emailInput=document.getElementById("email").value;
+let pass=document.getElementById("password").value;
+
+if(!email||!pass) return alert("กรอกข้อมูล");
+
+let saved=localStorage.getItem("user_"+email);
+
+if(saved && saved!==pass) return alert("รหัสผ่านไม่ถูกต้อง");
+
+localStorage.setItem("user_"+email,pass);
+currentUser=email;
+
 startApp();
-}else alert("ข้อมูลผิด");
 }
 
 function startApp(){
@@ -166,6 +187,7 @@ expense=Number(localStorage.getItem(currentUser+"_expense"))||0;
 totalFoodCal=Number(localStorage.getItem(currentUser+"_foodCal"))||0;
 activities=JSON.parse(localStorage.getItem(currentUser+"_activities"))||[];
 
+loadProfile();
 updateUI();
 renderActivities();
 
@@ -181,6 +203,7 @@ function backMenu(){
 moneyPage.style.display="none";
 calPage.style.display="none";
 activityPage.style.display="none";
+profilePage.style.display="none";
 menuPage.style.display="block";
 }
 
@@ -198,7 +221,8 @@ totalFoodCal.innerText=totalFoodCal;
 function addItem(){
 let type=document.getElementById("type").value;
 let amount=parseFloat(document.getElementById("amount").value);
-if(isNaN(amount)) return alert("ใส่เงิน");
+
+if(isNaN(amount)) return alert("ใส่จำนวนเงิน");
 
 if(type==="income") income+=amount;
 else expense+=amount;
@@ -225,6 +249,7 @@ burnCal.innerText=m*4;
 function addActivity(){
 let name=activityName.value;
 let time=activityTime.value;
+
 activities.push({name,time});
 localStorage.setItem(currentUser+"_activities",JSON.stringify(activities));
 renderActivities();
@@ -237,6 +262,34 @@ let li=document.createElement("li");
 li.innerText=a.name+" - "+a.time;
 activityList.appendChild(li);
 });
+}
+
+function saveProfile(){
+let profile={
+name:name.value,
+age:age.value,
+weight:weight.value,
+goal:goal.value,
+img:imgUrl.value
+};
+
+localStorage.setItem(currentUser+"_profile",JSON.stringify(profile));
+loadProfile();
+alert("บันทึกโปรไฟล์แล้ว");
+}
+
+function loadProfile(){
+let profile=JSON.parse(localStorage.getItem(currentUser+"_profile"))||{};
+
+name.value=profile.name||"";
+age.value=profile.age||"";
+weight.value=profile.weight||"";
+goal.value=profile.goal||"";
+imgUrl.value=profile.img||"";
+
+if(profile.img){
+profileImg.src=profile.img;
+}
 }
 
 setInterval(()=>{
