@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Smart Life App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+font-family: Arial;
+margin:0;
+background: linear-gradient(135deg,#4facfe,#00f2fe);
+color:#333;
+}
+
+.container{
+max-width:400px;
+margin:auto;
+background:white;
+min-height:100vh;
+padding:20px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+h1{
+text-align:center;
+}
+
+input, select, button{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:10px;
+border:1px solid #ccc;
+}
+
+button{
+background:#4facfe;
+color:white;
+border:none;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#3b8eea;
+}
+
+.menu button{
+margin:10px 0;
+font-size:18px;
+}
+
+.back{
+background:#888;
+}
+
+ul{
+text-align:left;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="container">
+<h1>🔐 Login</h1>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<button onclick="register()">สมัครสมาชิก</button>
+<button onclick="login()">เข้าสู่ระบบ</button>
+</div>
+
+<!-- MENU -->
+<div id="menuPage" class="container" style="display:none;">
+<h1>📱 Smart Life</h1>
+<div class="menu">
+<button onclick="openPage('moneyPage')">💰 รายรับรายจ่าย</button>
+<button onclick="openPage('calPage')">🔥 คำนวณแคลอรี่</button>
+<button onclick="openPage('activityPage')">⏰ แจ้งเตือนกิจกรรม</button>
+</div>
+<button class="back" onclick="logout()">ออกจากระบบ</button>
+</div>
+
+<!-- MONEY PAGE -->
+<div id="moneyPage" class="container" style="display:none;">
+<h1>💰 การเงิน</h1>
+
+<select id="type">
+<option value="income">รายรับ</option>
+<option value="expense">รายจ่าย</option>
+</select>
+
+<input type="number" id="amount" placeholder="จำนวนเงิน">
+<button onclick="addItem()">เพิ่ม</button>
+
+<h3>รายรับ: <span id="incomeTotal">0</span></h3>
+<h3>รายจ่าย: <span id="expenseTotal">0</span></h3>
+<h3>คงเหลือ: <span id="balance">0</span></h3>
+
+<button class="back" onclick="backMenu()">กลับเมนู</button>
+</div>
+
+<!-- CALORIE PAGE -->
+<div id="calPage" class="container" style="display:none;">
+<h1>🔥 แคลอรี่</h1>
+
+<input type="number" id="foodCal" placeholder="แคลอรี่ที่กิน">
+<button onclick="addFood()">เพิ่ม</button>
+<h3>รวม: <span id="totalFoodCal">0</span> kcal</h3>
+
+<input type="number" id="walkMinutes" placeholder="เดินกี่นาที">
+<button onclick="calculateWalk()">คำนวณ</button>
+<h3>เผาผลาญ: <span id="burnCal">0</span></h3>
+
+<button class="back" onclick="backMenu()">กลับเมนู</button>
+</div>
+
+<!-- ACTIVITY PAGE -->
+<div id="activityPage" class="container" style="display:none;">
+<h1>⏰ กิจกรรม</h1>
+
+<input type="text" id="activityName" placeholder="ชื่อกิจกรรม">
+<input type="time" id="activityTime">
+<button onclick="addActivity()">เพิ่มแจ้งเตือน</button>
+
+<ul id="activityList"></ul>
+
+<button class="back" onclick="backMenu()">กลับเมนู</button>
+</div>
+
+<script>
+let currentUser=null;
+let income=0;
+let expense=0;
+let totalFoodCal=0;
+let activities=[];
+
+function register(){
+let u=username.value;
+let p=password.value;
+if(!u||!p) return alert("กรอกข้อมูล");
+localStorage.setItem("user_"+u,p);
+alert("สมัครสำเร็จ");
+}
+
+function login(){
+let u=username.value;
+let p=password.value;
+let saved=localStorage.getItem("user_"+u);
+if(saved===p){
+currentUser=u;
+startApp();
+}else alert("ข้อมูลผิด");
+}
+
+function startApp(){
+loginPage.style.display="none";
+menuPage.style.display="block";
+
+income=Number(localStorage.getItem(currentUser+"_income"))||0;
+expense=Number(localStorage.getItem(currentUser+"_expense"))||0;
+totalFoodCal=Number(localStorage.getItem(currentUser+"_foodCal"))||0;
+activities=JSON.parse(localStorage.getItem(currentUser+"_activities"))||[];
+
+updateUI();
+renderActivities();
+
+Notification.requestPermission();
+}
+
+function openPage(page){
+menuPage.style.display="none";
+document.getElementById(page).style.display="block";
+}
+
+function backMenu(){
+moneyPage.style.display="none";
+calPage.style.display="none";
+activityPage.style.display="none";
+menuPage.style.display="block";
+}
+
+function logout(){
+location.reload();
+}
+
+function updateUI(){
+incomeTotal.innerText=income;
+expenseTotal.innerText=expense;
+balance.innerText=income-expense;
+totalFoodCal.innerText=totalFoodCal;
+}
+
+function addItem(){
+let type=document.getElementById("type").value;
+let amount=parseFloat(document.getElementById("amount").value);
+if(isNaN(amount)) return alert("ใส่เงิน");
+
+if(type==="income") income+=amount;
+else expense+=amount;
+
+localStorage.setItem(currentUser+"_income",income);
+localStorage.setItem(currentUser+"_expense",expense);
+updateUI();
+}
+
+function addFood(){
+let cal=parseFloat(foodCal.value);
+if(isNaN(cal)) return alert("ใส่แคลอรี่");
+
+totalFoodCal+=cal;
+localStorage.setItem(currentUser+"_foodCal",totalFoodCal);
+updateUI();
+}
+
+function calculateWalk(){
+let m=walkMinutes.value;
+burnCal.innerText=m*4;
+}
+
+function addActivity(){
+let name=activityName.value;
+let time=activityTime.value;
+activities.push({name,time});
+localStorage.setItem(currentUser+"_activities",JSON.stringify(activities));
+renderActivities();
+}
+
+function renderActivities(){
+activityList.innerHTML="";
+activities.forEach(a=>{
+let li=document.createElement("li");
+li.innerText=a.name+" - "+a.time;
+activityList.appendChild(li);
+});
+}
+
+setInterval(()=>{
+let now=new Date().toTimeString().slice(0,5);
+activities.forEach(a=>{
+if(a.time===now){
+new Notification("แจ้งเตือนกิจกรรม",{body:a.name});
+}
+});
+},30000);
+</script>
+
+</body>
+</html>
